@@ -1,0 +1,38 @@
+name: Repo Dispatcher
+
+on:
+  schedule:
+    - cron: 55 16 * * *
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+
+    - name: Initialization environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        #sudo -E apt-get remove --purge man-db -y
+        sudo ln -sf /bin/true /usr/bin/mandb 
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install aggregate whois jq unzip
+
+    - name: Update Rules
+      env:
+        URL: ${{secrets.URL}}
+        TOKEN1: ${{secrets.TOKEN1}}
+        USER1: ${{secrets.USER1}}
+      run: |
+        chmod +x update
+        ./update
+
+    - name: Delete workflow runs
+      uses: maha-1912/delete-workflow-runs@main
+      with:
+        retain_min: 0
+        keep_minimum_runs: 0
